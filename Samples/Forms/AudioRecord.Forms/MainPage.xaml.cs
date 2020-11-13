@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using Xamarin.Forms;
 using Plugin.AudioRecorder;
@@ -9,6 +10,7 @@ namespace AudioRecord.Forms
 	{
 		AudioRecorderService recorder;
 		AudioPlayer player;
+		private Stream stream;
 
 		public MainPage ()
 		{
@@ -40,9 +42,12 @@ namespace AudioRecord.Forms
 
 					RecordButton.IsEnabled = false;
 					PlayButton.IsEnabled = false;
+					
+					stream?.Dispose();
+					stream = new MemoryStream();
 
 					//start recording audio
-					var audioRecordTask = await recorder.StartRecording ();
+					var audioRecordTask = await recorder.StartRecording(stream);
 
 					RecordButton.Text = "Stop Recording";
 					RecordButton.IsEnabled = true;
@@ -86,6 +91,9 @@ namespace AudioRecord.Forms
 					RecordButton.IsEnabled = false;
 
 					player.Play (filePath);
+				} else if (stream != null)
+				{
+					player.Play(stream);
 				}
 			}
 			catch (Exception ex)

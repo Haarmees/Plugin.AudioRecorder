@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
 using Windows.Media.Core;
@@ -24,6 +25,11 @@ namespace Plugin.AudioRecorder
 			_ = PlayAudio (pathToAudioFile);
 		}
 
+		public void Play(Stream stream)
+		{
+			_ = PlayAudio (stream);
+		}
+
 		async Task PlayAudio (string pathToAudioFile)
 		{
 			StorageFolder temporaryFolder = ApplicationData.Current.TemporaryFolder;
@@ -33,6 +39,12 @@ namespace Plugin.AudioRecorder
 			IRandomAccessStream stream = await storageFile.OpenAsync (FileAccessMode.Read);
 			audioPlayer.Source = MediaSource.CreateFromStream (stream, storageFile.FileType);
 			audioPlayer.Play ();
+		}
+		
+		async Task PlayAudio (Stream stream, string contentType = "audio/wav")
+		{
+			audioPlayer.Source = MediaSource.CreateFromStream(stream.AsRandomAccessStream(), contentType);
+			audioPlayer.Play();
 		}
 
 		async void AudioPlayer_MediaEnded (MediaPlayer sender, object args)
