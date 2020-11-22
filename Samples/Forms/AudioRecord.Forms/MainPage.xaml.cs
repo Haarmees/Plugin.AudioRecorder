@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using Xamarin.Forms;
 using Plugin.AudioRecorder;
@@ -9,6 +10,9 @@ namespace AudioRecord.Forms
 	{
 		AudioRecorderService recorder;
 		AudioPlayer player;
+		private MemoryStream memoryStream;
+		private string testFilePath = Path.Combine(Path.GetTempPath(), "test.wav");
+
 
 		public MainPage ()
 		{
@@ -41,8 +45,10 @@ namespace AudioRecord.Forms
 					RecordButton.IsEnabled = false;
 					PlayButton.IsEnabled = false;
 
+					memoryStream?.Dispose();
+					memoryStream = new MemoryStream();
 					//start recording audio
-					var audioRecordTask = await recorder.StartRecording ();
+					var audioRecordTask = await recorder.StartRecording (memoryStream, true);
 
 					RecordButton.Text = "Stop Recording";
 					RecordButton.IsEnabled = true;
@@ -78,14 +84,26 @@ namespace AudioRecord.Forms
 		{
 			try
 			{
+				var fileInfo = new FileInfo(testFilePath);
+				if (fileInfo.Exists)
+				{
+					fileInfo.Delete();
+				}
+
+				using (var fileStream = fileInfo.Create())
+				{
+					memoryStream.Seek(0, SeekOrigin.Begin);
+					memoryStream.CopyTo(fileStream);
+				}
+				
 				var filePath = recorder.GetAudioFilePath ();
 
-				if (filePath != null)
+				if (testFilePath != null)
 				{
 					PlayButton.IsEnabled = false;
 					RecordButton.IsEnabled = false;
 
-					player.Play (filePath);
+					player.Play (testFilePath);
 				}
 			}
 			catch (Exception ex)
